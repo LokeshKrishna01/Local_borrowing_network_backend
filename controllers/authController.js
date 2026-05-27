@@ -3,6 +3,7 @@ const { validationResult } = require('express-validator');
 const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
 const sendEmail = require('../utils/sendEmail');
+const { deleteUserAndData } = require('../utils/deleteUserHelper');
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -232,4 +233,28 @@ const googleAuth = async (req, res) => {
   }
 };
 
-module.exports = { register, login, getMe, verifyOTP, googleAuth };
+// @desc    Delete logged-in user profile & all related data
+// @route   DELETE /api/auth/profile
+// @access  Private
+const deleteProfile = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // Check if user is an admin (we should not allow deleting the seed root admin)
+    const user = await User.findById(userId);
+    if (user && user.role === 'admin') {
+      return res.status(400).json({ message: 'Admin profile cannot be deleted.' });
+    }
+
+    const result = await deleteUserAndData(userId);
+    
+    res.json({
+      message: 'Your profile and all related data have been successfully deleted.',
+      details: result
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+module.exports = { register, login, getMe, verifyOTP, googleAuth, deleteProfile };

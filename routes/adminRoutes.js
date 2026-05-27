@@ -8,7 +8,8 @@ const {
   deleteItemAsAdmin,
   getStats,
   getAllItems,
-  getAllTransactions
+  getAllTransactions,
+  deleteUserAsAdmin
 } = require('../controllers/adminController');
 
 const router = express.Router();
@@ -19,6 +20,7 @@ router.use(protect, isAdmin);
 router.get('/users', getUsers);
 router.put('/users/:id/approve', approveUser);
 router.put('/users/:id/ban', banUser);
+router.delete('/users/:id', deleteUserAsAdmin);
 router.delete('/items/:id', deleteItemAsAdmin);
 router.get('/stats', getStats);
 router.get('/items', getAllItems);

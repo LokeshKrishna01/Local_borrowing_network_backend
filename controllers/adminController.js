@@ -2,6 +2,7 @@ const User = require('../models/User');
 const Item = require('../models/Item');
 const Transaction = require('../models/Transaction');
 const { createNotification } = require('../utils/notificationService');
+const { deleteUserAndData } = require('../utils/deleteUserHelper');
 
 // @desc    Get all users (with optional status filter)
 // @route   GET /api/admin/users
@@ -180,4 +181,41 @@ const getAllTransactions = async (req, res) => {
   }
 };
 
-module.exports = { getUsers, approveUser, banUser, deleteItemAsAdmin, getStats, getAllItems, getAllTransactions };
+// @desc    Permanently delete a user and all their data (admin moderation)
+// @route   DELETE /api/admin/users/:id
+// @access  Admin
+const deleteUserAsAdmin = async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    // Check if target is an admin
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (user.role === 'admin') {
+      return res.status(400).json({ message: 'Cannot delete admin account' });
+    }
+
+    const result = await deleteUserAndData(userId);
+
+    res.json({
+      message: `User ${user.name} and all their related community data have been permanently deleted.`,
+      details: result
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+module.exports = { 
+  getUsers, 
+  approveUser, 
+  banUser, 
+  deleteItemAsAdmin, 
+  getStats, 
+  getAllItems, 
+  getAllTransactions,
+  deleteUserAsAdmin 
+};
