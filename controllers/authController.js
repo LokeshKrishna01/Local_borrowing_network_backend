@@ -45,6 +45,8 @@ const register = async (req, res) => {
       otpExpiresAt,
     });
 
+    console.log(`🔑 [OTP] User registered: ${email} | Generated OTP Code: ${otp}`);
+
     // Send OTP email
     const message = `Welcome to NeighborGoods!\n\nYour email verification code is: ${otp}\n\nThis code will expire in 15 minutes.`;
     let emailSent = true;
