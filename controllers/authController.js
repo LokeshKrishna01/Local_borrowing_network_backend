@@ -47,15 +47,24 @@ const register = async (req, res) => {
 
     // Send OTP email
     const message = `Welcome to NeighborGoods!\n\nYour email verification code is: ${otp}\n\nThis code will expire in 15 minutes.`;
-    await sendEmail({
-      email: user.email,
-      subject: 'NeighborGoods - Verify your email',
-      message,
-    });
+    let emailSent = true;
+    try {
+      await sendEmail({
+        email: user.email,
+        subject: 'NeighborGoods - Verify your email',
+        message,
+      });
+    } catch (emailError) {
+      console.error('Failed to send OTP email:', emailError.message);
+      emailSent = false;
+    }
 
     res.status(201).json({
-      message: 'Registration successful! An OTP has been sent to your email to verify your account.',
+      message: emailSent
+        ? 'Registration successful! An OTP has been sent to your email to verify your account.'
+        : `Registration successful! However, we couldn't send the verification email. Your OTP code is: ${otp}`,
       email: user.email,
+      otp: emailSent ? undefined : otp, // Expose OTP only if email fails
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
