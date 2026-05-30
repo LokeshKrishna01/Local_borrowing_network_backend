@@ -155,6 +155,10 @@ const login = async (req, res) => {
         role: user.role,
         status: user.status,
         reputationScore: user.reputationScore,
+        profilePicture: user.profilePicture || '',
+        address: user.address || '',
+        phone: user.phone || '',
+        bio: user.bio || '',
       },
       token: generateToken(user._id),
     });
@@ -176,6 +180,10 @@ const getMe = async (req, res) => {
       role: user.role,
       status: user.status,
       reputationScore: user.reputationScore,
+      profilePicture: user.profilePicture || '',
+      address: user.address || '',
+      phone: user.phone || '',
+      bio: user.bio || '',
       createdAt: user.createdAt,
     });
   } catch (error) {
@@ -235,6 +243,10 @@ const googleAuth = async (req, res) => {
         role: user.role,
         status: user.status,
         reputationScore: user.reputationScore,
+        profilePicture: user.profilePicture || '',
+        address: user.address || '',
+        phone: user.phone || '',
+        bio: user.bio || '',
       },
       token: generateToken(user._id),
     });
@@ -268,4 +280,45 @@ const deleteProfile = async (req, res) => {
   }
 };
 
-module.exports = { register, login, getMe, verifyOTP, googleAuth, deleteProfile };
+// @desc    Update current user profile
+// @route   PUT /api/auth/profile
+// @access  Private
+const updateProfile = async (req, res) => {
+  try {
+    const { name, profilePicture, address, phone, bio } = req.body;
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (name) user.name = name;
+    if (profilePicture !== undefined) user.profilePicture = profilePicture;
+    if (address !== undefined) user.address = address;
+    if (phone !== undefined) user.phone = phone;
+    if (bio !== undefined) user.bio = bio;
+
+    await user.save();
+
+    res.json({
+      message: 'Profile updated successfully!',
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        status: user.status,
+        reputationScore: user.reputationScore,
+        profilePicture: user.profilePicture || '',
+        address: user.address || '',
+        phone: user.phone || '',
+        bio: user.bio || '',
+        createdAt: user.createdAt,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+module.exports = { register, login, getMe, verifyOTP, googleAuth, deleteProfile, updateProfile };
